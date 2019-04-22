@@ -61,5 +61,32 @@ def precipitation():
 
     return jsonify(precipitation_data)
 
+@app.route("/api/stations")
+def stations():
+    '''Return a list of stations in our  data'''
+    #Use Pandas `read_sql_query` to load a query statement directly into the DataFrame
+    stmt = session.query(Measurement).statement
+    measurement_df = pd.read_sql_query(stmt, session.bind)
+    list_stations = measurement_df['station'].unique()
+    #Need to convert the tuple to a list in order to run jsonify call properly
+    final_stations = list(np.ravel(list_stations))
+ 
+    return jsonify(final_stations)
+
+@app.route("/api/temperature")
+def temperature():
+    '''Query for the dates and temperature observations from a year from the last data point'''
+    #use date from pandas notebook. A year from last point would be 8-23-16, so we use anything after 8-22-16 as our reference point
+    year_ago_date = dt.datetime(2016, 8, 22)
+    temp_results = session.query(Measurement.date, Measurement.tobs).filter(Measurement.date > year_ago_date).order_by(Measurement.date).all()
+    # #create an empty list to be filled with info from for loop
+    last_year_temp = []
+    for date, temp in temp_results:
+        temp_dict = {}
+        temp_dict["date"] = date
+        temp_dict["temp"] = temp
+        last_year_temp.append(temp_dict)
+    return jsonify(last_year_temp)
+
 if __name__ == "__main__":
     app.run(debug=True)   
