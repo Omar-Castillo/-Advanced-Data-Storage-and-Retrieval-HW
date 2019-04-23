@@ -88,5 +88,39 @@ def temperature():
         last_year_temp.append(temp_dict)
     return jsonify(last_year_temp)
 
+@app.route("/api/<start>")
+# This function called `calc_temps` will accept start date in the format '%Y-%m-%d' 
+# and return the minimum, average, and maximum temperatures for that range of dates
+def start_temps(start):
+    """TMIN, TAVG, and TMAX for a list of dates.
+    Args:
+        start (string): A date string in the format %Y-%m-%d, example 2016-01-31
+        end_date (string): A date string in the format %Y-%m-%d
+        
+    Returns:
+        TMIN, TAVE, and TMAX
+    """
+    summary_data = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs))\
+        .filter(Measurement.date >= start).all()
+    final_data = list(np.ravel(summary_data))
+    return jsonify(final_data)
+    
+@app.route("/api/<start>/<end>")
+# This function called `calc_temps` will accept start date and end date in the format '%Y-%m-%d' 
+# and return the minimum, average, and maximum temperatures for that range of dates
+def between_temps(start,end):
+    """TMIN, TAVG, and TMAX for a list of dates.
+    Args:
+        start (string): A date string in the format %Y-%m-%d, 2016-01-31
+        end (string): A date string in the format %Y-%m-%d
+        
+    Returns:
+        TMIN, TAVE, and TMAX
+    """
+    between_data = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs))\
+        .filter(Measurement.date >= start).filter(Measurement.date<=end).all()
+    between_final = list(np.ravel(between_data))
+    return jsonify(between_final)
+
 if __name__ == "__main__":
     app.run(debug=True)   
